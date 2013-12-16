@@ -25,9 +25,6 @@
 
 	<bean id="sessionFactory"
 		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
-		<property name="configLocation">
-			<value>classpath:hibernate.cfg.xml</value>
-		</property>
 		<property name="dataSource" ref="dataSource"></property>
 		<property name="hibernateProperties">
 			<props>
@@ -36,6 +33,11 @@
 				<prop key="hibernate.format_sql">true</prop>
 			</props>
 		</property>
+		<property name="annotatedClasses">
+	        <list>
+	            <value>io.pelle.webexample.User</value>
+	        </list>
+	    </property>
 	</bean>
 
 	<bean id="transactionManager"

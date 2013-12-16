@@ -203,7 +203,7 @@
 		</war>
 	</target>
 
-	<target name="tomcat.local.run">
+	<target name="tomcat.local.run" depends="ivy.bootstrap">
 		
 		<resolve.lib conf="cargo" />
 
@@ -211,7 +211,7 @@
 
 	</target>
 
-	<target name="tomcat.local.run.debug">
+	<target name="tomcat.local.run.debug" depends="ivy.bootstrap">
 
 		<resolve.lib conf="cargo" />
 
@@ -219,7 +219,7 @@
 
 	</target>
 
-	<target name="start.client">
+	<target name="open.browser">
 		<openInBrowser url="http://${remote.server}:${remote.port}/${remote.path}"/>
 	</target>
 
