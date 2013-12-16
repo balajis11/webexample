@@ -151,7 +151,7 @@
 			</classpath>
 		</javac>
 
-		<junit printsummary="yes" haltonfailure="yes">
+		<junit printsummary="yes" haltonfailure="yes" fork="true">
 
 			<classpath>
 				<path refid="lib.path.id" />
@@ -160,7 +160,7 @@
 				<pathelement path="${test.dir}" />
 			</classpath>
 
-			<test name="io.pelle.webexample.WebExampleTestSuite" haltonfailure="no" outfile="${build.dir}/tests">
+			<test name="io.pelle.webexample.WebExampleTestSuite" outfile="${build.dir}/tests">
 				<formatter type="plain" />
 			</test>
 
@@ -208,9 +208,9 @@
 
 	<target name="war">
 
-		<mkdir dir="WebContent/WEB-INF/classes" />
-		<copy todir="WebContent/WEB-INF/classes" verbose="true">
-			<path refid="jar.files" />
+
+		<copy todir="${lib.dir}" verbose="true">
+			<file name="${build.dir}/${jar.file}" />
 		</copy>
 
 		<!-- WAR -->
@@ -226,11 +226,8 @@
 				<filename name="*.*" />
 			</metainf>
 
-			<classes dir="WebContent/WEB-INF/classes">
-				<include name="**/*.*" />
-			</classes>
-
 			<lib dir="${lib.dir}" />
+			
 		</war>
 	</target>
 
@@ -238,7 +235,7 @@
 
 		<resolve.lib conf="cargo" />
 
-		<tomcat.local action="run" war.file="${war.file}" cargo.datasource="${cargo.datasource}" cargo.jvmargs="${cargo.jvmargs}" />
+		<tomcat.local action="run" war.file="${build.dir}/${war.file}" cargo.datasource="${cargo.datasource}" cargo.jvmargs="${cargo.jvmargs}" />
 
 	</target>
 
@@ -246,7 +243,7 @@
 
 		<resolve.lib conf="cargo" />
 
-		<tomcat.local action="run" war.file="${war.file}" cargo.datasource="${cargo.datasource}" cargo.jvmargs="${cargo.jvmargs} -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=${remote.debug.port} -Xnoagent -Djava.compiler=NONE" />
+		<tomcat.local action="run" war.file="${build.dir}/${war.file}" cargo.datasource="${cargo.datasource}" cargo.jvmargs="${cargo.jvmargs} -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=${remote.debug.port} -Xnoagent -Djava.compiler=NONE" />
 
 	</target>
 
