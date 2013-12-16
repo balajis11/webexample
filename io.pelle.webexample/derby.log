@@ -1,0 +1,10 @@
+----------------------------------------------------------------
+Mon Dec 16 22:04:07 CET 2013:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.9.1.0 - (1344872): instance a816c00e-0142-fd39-1b90-0000066f7110 
+on database directory /home/pelle/workspaces/workspace_checksystem/io.pelle.webexample/derbyDB  with class loader sun.misc.Launcher$AppClassLoader@417470d0 
+Loaded from file:/home/pelle/.ivy2/cache/org.apache.derby/derby/jars/derby-10.9.1.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=1.7.0_25-b30
+user.dir=/home/pelle/workspaces/workspace_checksystem/io.pelle.webexample
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''

@@ -1,0 +1,230 @@
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="io.pelle.webexample" default="build">
+
+	<property file="build.properties" />
+	<property file="${test.dir}/db.properties" />
+
+	<property name="cargo.datasource" value="cargo.datasource.driver=${jdbc.driverClassName}|cargo.datasource.url=${jdbc.url}|cargo.datasource.jndi=${jndi.name}|cargo.datasource.username=${jdbc.username}|cargo.datasource.password=${jdbc.password}" />
+	
+	<macrodef name="openInBrowser">
+		<attribute name="url" />
+		<sequential>
+			<exec dir="${basedir}" os="Windows 7" executable="rundll32.exe">
+				<arg line="url.dll, FileProtocolHandler" />
+				<arg line="@{url}" />
+			</exec>
+			<exec dir="${basedir}" os="Linux" executable="xdg-open">
+				<arg line="@{url}" />
+			</exec>
+		</sequential>
+	</macrodef>	
+	
+	<macrodef name="resolve.lib">
+
+		<attribute name="conf" default="default" />
+
+		<sequential>
+			<antcall target="clean.lib" />
+			
+			<mkdir dir="${lib.dir}" />
+			<ivy:resolve file="${ivy.file}" conf="@{conf}" checkifchanged="true" />
+			<ivy:retrieve overwriteMode="always"  pattern="${lib.dir}/[artifact]-[type].[ext]" conf="@{conf}" />
+		</sequential>
+		
+	</macrodef>
+
+	<macrodef name="tomcat.local">
+
+		<attribute name="action" />
+		<attribute name="cargo.jvmargs" />
+		<attribute name="war.file" />
+		<attribute name="cargo.datasource" />
+
+		<sequential>
+
+			<taskdef resource="cargo.tasks">
+				<classpath>
+					<pathelement location="lib/cargo-core-uberjar-jar.jar" />
+					<pathelement location="lib/cargo-ant-jar.jar" />
+					<fileset dir="lib" includes="*jar" />
+				</classpath>
+			</taskdef>
+
+			<mkdir dir="tomcat" />
+			<mkdir dir="tomcat/downloads" />
+			<mkdir dir="tomcat/extracts" />
+			<mkdir dir="tomcat/logs" />
+
+			<echo>cargo.jvmargs: @{cargo.jvmargs}</echo>
+			<echo>cargo.datasource: @{cargo.datasource}</echo>
+			
+			<cargo containerId="tomcat6x" output="tomcat/logs/output.log" log="tomcat/logs/cargo.log" action="@{action}">
+
+				<zipUrlInstaller installUrl="${cargo.tomcat.install.url}" downloadDir="tomcat/downloads" extractDir="tomcat/server" />
+
+				<extraClasspath>
+					<pathelement location="lib/derby-jar.jar" />
+					<pathelement location="lib/javaee-api-jar.jar" />
+				</extraClasspath>
+				
+				<configuration>
+					<property name="cargo.servlet.port" value="${remote.port}" />
+
+					<property name="cargo.jvmargs" value="@{cargo.jvmargs}" />
+					<property name="cargo.datasource.datasource1" value="@{cargo.datasource}" />
+					<deployable type="war" file="@{war.file}" />
+				</configuration>
+
+			</cargo>
+
+			<waitfor checkevery="5" checkeveryunit="second" maxwait="60" maxwaitunit="second">
+				<http url="${remote.url}" />
+			</waitfor>
+
+		</sequential>
+	</macrodef>
+
+	<tstamp>
+		<format property="build.timestamp" pattern="yyyyMMddHHmmss" />
+	</tstamp>
+
+	<path id="lib.path.id">
+		<fileset dir="${lib.dir}" />
+	</path>
+
+	<path id="source.jar.files">
+		<fileset dir="${src.dir}" />
+	</path>
+
+	<path id="jar.files">
+		<fileset dir="${classes.dir}" />
+		<fileset dir="${src.dir}">
+			<include name="**/*.xml"/>
+			<include name="**/*.properties"/>
+		</fileset>
+	</path>
+
+	<target name="clean.lib">
+		<delete includeemptydirs="true" dir="${lib.dir}" failonerror="false" />
+	</target>
+
+	<!-- ivy bootstrap -->
+	<target name="ivy.bootstrap.download" unless="skip.download">
+		<mkdir dir="${ivy.bootstrap.dir}" />
+		<get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.version}/ivy-${ivy.version}.jar" dest="${ivy.jar.file}" usetimestamp="true" />
+	</target>
+
+	<target name="ivy.bootstrap" depends="ivy.bootstrap.download">
+
+		<path id="ivy.bootstrap.lib.path">
+			<fileset dir="${ivy.bootstrap.dir}" includes="*.jar" />
+		</path>
+
+		<taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpathref="ivy.bootstrap.lib.path" />
+
+		<ivy:resolve file="${ivy.bootstrap.file}" checkifchanged="true" />
+		<ivy:retrieve overwriteMode="always" pattern="${ivy.bootstrap.dir}/[artifact]-[revision]-[type].[ext]" />
+
+	</target>
+
+	<target name="compile">
+
+		<resolve.lib />
+		
+		<delete dir="${classes.dir}" />
+		<mkdir dir="${classes.dir}" />
+		
+		<javac destdir="${classes.dir}" classpathref="lib.path.id" debuglevel="${javac.debuglevel}" debug="${javac.debug}" target="${javac.target}" source="${javac.source}" includeAntRuntime="false" srcdir="${src.dir}" />
+
+	</target>
+
+	<target name="jar">
+
+		<jar destfile="${jar.file}">
+			<path refid="jar.files" />
+			<manifest>
+				<attribute name="Built-By" value="Christian Pelster" />
+				<attribute name="Build-Version" value="${version}" />
+			</manifest>
+		</jar>
+
+		<jar destfile="${jar.source.file}">
+			<path refid="source.jar.files" />
+			<manifest>
+				<attribute name="Built-By" value="Christian Pelster" />
+				<attribute name="Build-Version" value="${version}" />
+			</manifest>
+		</jar>
+
+	</target>
+
+	<target name="build" depends="ivy.bootstrap">
+	
+		<antcall target="compile" />
+		<antcall target="jar" />
+		<antcall target="war" />
+	</target>
+
+	<target name="publish" depends="build">
+
+		<ivy:settings id="ivy.settings" file="commons_ivysettings.xml" />
+
+		<ivy:publish settingsref="ivy.settings" artifactspattern="${build.dir}/[artifact].[ext]" resolver="gwt-commons" pubrevision="${version}" pubdate="${build.timestamp}" status="integration" forcedeliver="true" overwrite="true" />
+	</target>
+
+	<target name="publish.local" depends="build">
+		<ivy:publish artifactspattern="${build.dir}/[artifact].[ext]" resolver="local" pubrevision="${version}" pubdate="${build.timestamp}" status="integration" forcedeliver="true" overwrite="true" />
+	</target>
+
+	<target name="war">
+
+		<mkdir dir="WebContent/WEB-INF/classes" />
+		<copy todir="WebContent/WEB-INF/classes" verbose="true">
+			<path refid="jar.files" />
+		</copy>
+
+		<!-- WAR -->
+		<war destfile="${war.file}" webxml="WebContent/WEB-INF/web.xml">
+
+			<fileset dir="web" includes="**/*" />
+
+			<webinf dir="WebContent/WEB-INF">
+				<filename name="**/*" />
+			</webinf>
+
+			<metainf dir="WebContent/META-INF">
+				<filename name="*.*" />
+			</metainf>
+
+			<classes dir="WebContent/WEB-INF/classes">
+				<include name="**/*.*" />
+			</classes>
+
+			<lib dir="${lib.dir}" />
+		</war>
+	</target>
+
+	<target name="tomcat.local.run">
+		
+		<resolve.lib conf="cargo" />
+
+		<tomcat.local action="run" war.file="${war.file}" cargo.datasource="${cargo.datasource}" cargo.jvmargs="${cargo.jvmargs}" />
+
+	</target>
+
+	<target name="tomcat.local.run.debug">
+
+		<resolve.lib conf="cargo" />
+
+		<tomcat.local action="run" war.file="${war.file}" cargo.datasource="${cargo.datasource}" cargo.jvmargs="${cargo.jvmargs} -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=${remote.debug.port} -Xnoagent -Djava.compiler=NONE" />
+
+	</target>
+
+	<target name="start.client">
+		<openInBrowser url="http://${remote.server}:${remote.port}/${remote.path}"/>
+	</target>
+
+	<target name="info">
+		<echo message="cargo.datasource: ${cargo.datasource}" />
+	</target>
+
+</project>

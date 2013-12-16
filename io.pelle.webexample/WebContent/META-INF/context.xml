@@ -1,0 +1,7 @@
+<Context path="/io.pelle.webexample" docBase="io.pelle.webexample"
+	reloadable="true" antiJARLocking="true" antiResourceLocking="true">
+	
+	<ResourceLink name="jdbc/webexample" global="jdbc/webexample"
+		type="javax.sql.DataSource" />
+		
+</Context>
