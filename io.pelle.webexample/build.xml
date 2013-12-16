@@ -1,10 +1,14 @@
 <project xmlns:ivy="antlib:org.apache.ivy.ant" name="io.pelle.webexample" default="build">
 
+	<!-- properties -->
 	<property file="build.properties" />
 	<property file="${test.dir}/db.properties" />
-
+	<tstamp>
+		<format property="build.timestamp" pattern="yyyyMMddHHmmss" />
+	</tstamp>
 	<property name="cargo.datasource" value="cargo.datasource.driver=${jdbc.driverClassName}|cargo.datasource.url=${jdbc.url}|cargo.datasource.jndi=${jndi.name}|cargo.datasource.username=${jdbc.username}|cargo.datasource.password=${jdbc.password}" />
-	
+
+	<!-- macros -->
 	<macrodef name="openInBrowser">
 		<attribute name="url" />
 		<sequential>
@@ -16,20 +20,20 @@
 				<arg line="@{url}" />
 			</exec>
 		</sequential>
-	</macrodef>	
-	
+	</macrodef>
+
 	<macrodef name="resolve.lib">
 
 		<attribute name="conf" default="default" />
 
 		<sequential>
 			<antcall target="clean.lib" />
-			
+
 			<mkdir dir="${lib.dir}" />
 			<ivy:resolve file="${ivy.file}" conf="@{conf}" checkifchanged="true" />
-			<ivy:retrieve overwriteMode="always"  pattern="${lib.dir}/[artifact]-[type].[ext]" conf="@{conf}" />
+			<ivy:retrieve overwriteMode="always" pattern="${lib.dir}/[artifact]-[type].[ext]" conf="@{conf}" />
 		</sequential>
-		
+
 	</macrodef>
 
 	<macrodef name="tomcat.local">
@@ -56,7 +60,7 @@
 
 			<echo>cargo.jvmargs: @{cargo.jvmargs}</echo>
 			<echo>cargo.datasource: @{cargo.datasource}</echo>
-			
+
 			<cargo containerId="tomcat6x" output="tomcat/logs/output.log" log="tomcat/logs/cargo.log" action="@{action}">
 
 				<zipUrlInstaller installUrl="${cargo.tomcat.install.url}" downloadDir="tomcat/downloads" extractDir="tomcat/server" />
@@ -65,7 +69,7 @@
 					<pathelement location="lib/derby-jar.jar" />
 					<pathelement location="lib/javaee-api-jar.jar" />
 				</extraClasspath>
-				
+
 				<configuration>
 					<property name="cargo.servlet.port" value="${remote.port}" />
 
@@ -83,10 +87,7 @@
 		</sequential>
 	</macrodef>
 
-	<tstamp>
-		<format property="build.timestamp" pattern="yyyyMMddHHmmss" />
-	</tstamp>
-
+	<!-- paths -->
 	<path id="lib.path.id">
 		<fileset dir="${lib.dir}" />
 	</path>
@@ -98,14 +99,10 @@
 	<path id="jar.files">
 		<fileset dir="${classes.dir}" />
 		<fileset dir="${src.dir}">
-			<include name="**/*.xml"/>
-			<include name="**/*.properties"/>
+			<include name="**/*.xml" />
+			<include name="**/*.properties" />
 		</fileset>
 	</path>
-
-	<target name="clean.lib">
-		<delete includeemptydirs="true" dir="${lib.dir}" failonerror="false" />
-	</target>
 
 	<!-- ivy bootstrap -->
 	<target name="ivy.bootstrap.download" unless="skip.download">
@@ -126,20 +123,53 @@
 
 	</target>
 
+
+	<target name="clean.lib">
+		<delete includeemptydirs="true" dir="${lib.dir}" failonerror="false" />
+	</target>
+
 	<target name="compile">
 
 		<resolve.lib />
-		
+
 		<delete dir="${classes.dir}" />
 		<mkdir dir="${classes.dir}" />
-		
+
 		<javac destdir="${classes.dir}" classpathref="lib.path.id" debuglevel="${javac.debuglevel}" debug="${javac.debug}" target="${javac.target}" source="${javac.source}" includeAntRuntime="false" srcdir="${src.dir}" />
 
 	</target>
 
+	<target name="test">
+
+		<delete dir="${classes.dir}" />
+		<mkdir dir="${classes.dir}" />
+
+		<javac destdir="${classes.dir}" debuglevel="${javac.debuglevel}" debug="${javac.debug}" target="${javac.target}" source="${javac.source}" includeAntRuntime="false" srcdir="${test.dir}">
+			<classpath refid="lib.path.id" />
+			<classpath>
+				<fileset dir="${build.dir}" includes="${jar.file}" />
+			</classpath>
+		</javac>
+
+		<junit printsummary="yes" haltonfailure="yes">
+
+			<classpath>
+				<path refid="lib.path.id" />
+				<pathelement path="${build.dir}/${jar.file}" />
+				<pathelement path="${classes.dir}" />
+				<pathelement path="${test.dir}" />
+			</classpath>
+
+			<test name="io.pelle.webexample.WebExampleTestSuite" haltonfailure="no" outfile="${build.dir}/tests">
+				<formatter type="plain" />
+			</test>
+
+		</junit>
+	</target>
+
 	<target name="jar">
 
-		<jar destfile="${jar.file}">
+		<jar destfile="${build.dir}/${jar.file}">
 			<path refid="jar.files" />
 			<manifest>
 				<attribute name="Built-By" value="Christian Pelster" />
@@ -147,7 +177,7 @@
 			</manifest>
 		</jar>
 
-		<jar destfile="${jar.source.file}">
+		<jar destfile="${build.dir}/${jar.source.file}">
 			<path refid="source.jar.files" />
 			<manifest>
 				<attribute name="Built-By" value="Christian Pelster" />
@@ -158,9 +188,10 @@
 	</target>
 
 	<target name="build" depends="ivy.bootstrap">
-	
+
 		<antcall target="compile" />
 		<antcall target="jar" />
+		<antcall target="test" />
 		<antcall target="war" />
 	</target>
 
@@ -183,7 +214,7 @@
 		</copy>
 
 		<!-- WAR -->
-		<war destfile="${war.file}" webxml="WebContent/WEB-INF/web.xml">
+		<war destfile="${build.dir}/${war.file}" webxml="WebContent/WEB-INF/web.xml">
 
 			<fileset dir="web" includes="**/*" />
 
@@ -204,7 +235,7 @@
 	</target>
 
 	<target name="tomcat.local.run" depends="ivy.bootstrap">
-		
+
 		<resolve.lib conf="cargo" />
 
 		<tomcat.local action="run" war.file="${war.file}" cargo.datasource="${cargo.datasource}" cargo.jvmargs="${cargo.jvmargs}" />
@@ -220,7 +251,7 @@
 	</target>
 
 	<target name="open.browser">
-		<openInBrowser url="http://${remote.server}:${remote.port}/${remote.path}"/>
+		<openInBrowser url="http://${remote.server}:${remote.port}/${remote.path}" />
 	</target>
 
 	<target name="info">

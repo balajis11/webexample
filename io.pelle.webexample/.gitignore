@@ -1,1 +1,6 @@
 /bin
+/build
+/classes
+/ivy-bootstrap
+/lib
+/tomcat
