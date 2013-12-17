@@ -125,6 +125,7 @@
 
 	<target name="clean">
 		<antcall target="clean.lib" />
+		<antcall target="clean.derby" />
 		<delete includeemptydirs="true" dir="${cargo.dir}" failonerror="false" />
 		<delete includeemptydirs="true" dir="${classes.dir}" failonerror="false" />
 		<delete includeemptydirs="true" dir="${build.dir}" failonerror="false" />
@@ -134,6 +135,10 @@
 	
 	<target name="clean.lib">
 		<delete includeemptydirs="true" dir="${lib.dir}" failonerror="false" />
+	</target>
+
+	<target name="clean.derby">
+		<delete includeemptydirs="true" dir="${derby.dir}" failonerror="false" />
 	</target>
 
 	<target name="compile">
@@ -147,7 +152,7 @@
 
 	</target>
 
-	<target name="test">
+	<target name="test" depends="clean.derby">
 
 		<delete dir="${classes.dir}" />
 		<mkdir dir="${classes.dir}" />
