@@ -2,7 +2,7 @@
 
 	<!-- properties -->
 	<property file="build.properties" />
-	<property file="${test.dir}/db.properties" />
+	<property file="${test.src.dir}/db.properties" />
 	<tstamp>
 		<format property="build.timestamp" pattern="yyyyMMddHHmmss" />
 	</tstamp>
@@ -53,17 +53,17 @@
 				</classpath>
 			</taskdef>
 
-			<mkdir dir="tomcat" />
-			<mkdir dir="tomcat/downloads" />
-			<mkdir dir="tomcat/extracts" />
-			<mkdir dir="tomcat/logs" />
+			<mkdir dir="${cargo.dir}" />
+			<mkdir dir="${cargo.dir}/downloads" />
+			<mkdir dir="${cargo.dir}/extracts" />
+			<mkdir dir="${cargo.dir}/logs" />
 
 			<echo>cargo.jvmargs: @{cargo.jvmargs}</echo>
 			<echo>cargo.datasource: @{cargo.datasource}</echo>
 
-			<cargo containerId="tomcat6x" output="tomcat/logs/output.log" log="tomcat/logs/cargo.log" action="@{action}">
+			<cargo containerId="tomcat6x" output="${cargo.dir}/logs/output.log" log="${cargo.dir}/logs/cargo.log" action="@{action}">
 
-				<zipUrlInstaller installUrl="${cargo.tomcat.install.url}" downloadDir="tomcat/downloads" extractDir="tomcat/server" />
+				<zipUrlInstaller installUrl="${cargo.tomcat.install.url}" downloadDir="${cargo.dir}/downloads" extractDir="tomcat/server" />
 
 				<extraClasspath>
 					<pathelement location="lib/derby-jar.jar" />
@@ -123,7 +123,15 @@
 
 	</target>
 
+	<target name="clean">
+		<antcall target="clean.lib" />
+		<delete includeemptydirs="true" dir="${cargo.dir}" failonerror="false" />
+		<delete includeemptydirs="true" dir="${classes.dir}" failonerror="false" />
+		<delete includeemptydirs="true" dir="${build.dir}" failonerror="false" />
+		<delete includeemptydirs="true" dir="${ivy.bootstrap.dir}" failonerror="false" />
+	</target>
 
+	
 	<target name="clean.lib">
 		<delete includeemptydirs="true" dir="${lib.dir}" failonerror="false" />
 	</target>
@@ -144,7 +152,7 @@
 		<delete dir="${classes.dir}" />
 		<mkdir dir="${classes.dir}" />
 
-		<javac destdir="${classes.dir}" debuglevel="${javac.debuglevel}" debug="${javac.debug}" target="${javac.target}" source="${javac.source}" includeAntRuntime="false" srcdir="${test.dir}">
+		<javac destdir="${classes.dir}" debuglevel="${javac.debuglevel}" debug="${javac.debug}" target="${javac.target}" source="${javac.source}" includeAntRuntime="false" srcdir="${test.src.dir}">
 			<classpath refid="lib.path.id" />
 			<classpath>
 				<fileset dir="${build.dir}" includes="${jar.file}" />
@@ -157,7 +165,7 @@
 				<path refid="lib.path.id" />
 				<pathelement path="${build.dir}/${jar.file}" />
 				<pathelement path="${classes.dir}" />
-				<pathelement path="${test.dir}" />
+				<pathelement path="${test.src.dir}" />
 			</classpath>
 
 			<test name="io.pelle.webexample.WebExampleTestSuite" outfile="${build.dir}/tests">

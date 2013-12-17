@@ -45,16 +45,4 @@
 		p:sessionFactory-ref="sessionFactory">
 	</bean>
 
-	<aop:config>
-		<aop:pointcut id="userDAOMethods"
-			expression="execution(* UserDAO(..))" />
-		<aop:advisor advice-ref="txAdvice" pointcut-ref="userDAOMethods" />
-	</aop:config>
-
-	<tx:advice id="txAdvice">
-		<tx:attributes>
-			<tx:method name="*" propagation="REQUIRED" />
-		</tx:attributes>
-	</tx:advice>
-
 </beans>

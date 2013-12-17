@@ -5,3 +5,6 @@
 /lib
 /tomcat
 /derbyDB
+/derby.log
+/cargo
+/db

@@ -12,12 +12,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 @RequestMapping("user")
-public class UserServiceController {
+public class UserController {
 
 	private UserDAO userDAO;
 
 	@Autowired
-	public UserServiceController(UserDAO userDAO) {
+	public UserController(UserDAO userDAO) {
 		this.userDAO = userDAO;
 	}
 
