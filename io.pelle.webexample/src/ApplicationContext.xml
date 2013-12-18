@@ -34,10 +34,10 @@
 			</props>
 		</property>
 		<property name="annotatedClasses">
-	        <list>
-	            <value>io.pelle.webexample.User</value>
-	        </list>
-	    </property>
+			<list>
+				<value>io.pelle.webexample.User</value>
+			</list>
+		</property>
 	</bean>
 
 	<bean id="transactionManager"

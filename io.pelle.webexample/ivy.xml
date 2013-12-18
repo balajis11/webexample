@@ -20,19 +20,23 @@
 
 	<dependencies defaultconf="*->default">
 
-		<dependency org="javax" name="javaee-api" rev="7.0" transitive="false">
-			<artifact name="javaee-api" type="jar" />
-		</dependency>
+		<dependency org="com.jayway.jsonpath" name="json-path" rev="0.9.1" />
+		
+		<dependency org="org.apache.tomcat" name="tomcat-servlet-api" rev="7.0.47" />
 
 		<dependency org="org.hibernate" name="hibernate-validator-annotation-processor" rev="4.1.0.Final" />
 
 		<dependency org="org.hibernate" name="hibernate-validator" rev="4.1.0.Final" />
 
+		<dependency org="org.hibernate" name="hibernate-core" rev="4.1.0.Final" />
+
 		<dependency org="org.slf4j" name="slf4j-api" rev="1.7.5" />
 
 		<dependency org="org.slf4j" name="slf4j-log4j12" rev="1.7.5" />
 
-		<dependency org="org.codehaus.jackson" name="jackson-mapper-asl" rev="1.9.13" />
+		<dependency org="com.fasterxml.jackson.core" name="jackson-core" rev="2.3.0" />
+
+		<dependency org="com.fasterxml.jackson.core" name="jackson-databind" rev="2.3.0" />
 
 		<dependency org="com.google.guava" name="guava" rev="15.0" />
 
@@ -101,8 +105,6 @@
 		<dependency org="javax.persistence" name="persistence-api" rev="1.0" />
 
 		<dependency org="commons-dbcp" name="commons-dbcp" rev="1.2.2" />
-
-		<dependency org="org.hibernate" name="hibernate-core" rev="4.2.8.Final" />
 
 		<dependency org="aspectj" name="aspectjweaver" rev="1.5.4" />
 
